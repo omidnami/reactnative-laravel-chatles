@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chat</title>
+    <script>
+        const socket = new WebSocket('ws://127.0.0.1:8080')
+        const uuid = Math.floor((Math.random() * 900) + 100) + '-' + Math.floor((Math.random() * 900) + 100) + '-' + Math.floor((Math.random() * 900) + 100) + '-' + Math.floor((Math.random() * 900) + 100);
+
+        if (!localStorage.getItem('session')){
+            localStorage.setItem('session', uuid)
+            connect(uuid)
+        }else {
+            connect(localStorage.getItem('session'))
+        }
+
+        function connect(session) {
+            const msg = {
+                        id:session,
+                        name:"",
+                        user_id:localStorage.getItem('--chat--user--')??0,
+                        sender:"client",
+                        to: 1,
+                        from: session,
+                        command: 'client-connected',
+                        token:"1114",
+                        massage:""
+                }
+            socket.onopen = () => {
+                // ارسال پیام به سرور
+                socket.send(JSON.stringify(msg));
+            };
+
+            socket.onmessage = (event) => {
+                const message = event.data;
+                document.getElementById('massage').append(JSON.parse(message).massage)
+                document.getElementById('massage').append('<br/>')
+                console.log(message)
+            };
+
+            socket.onclose = () => {
+                console.log('Connection closed.');
+            };
+        }
+
+
+        function send_msg(){
+            const msg = document.getElementById('msg').value
+            document.getElementById('massage').append(msg)
+            document.getElementById('massage').append('<br/>')
+            document.getElementById('msg').value = ''
+
+            const msg2 = {
+                id:localStorage.getItem('session'),
+                name:"",
+                user_id:localStorage.getItem('--chat--user--')??0,
+                sender:"client",
+                to: 1,
+                op:1,
+                from: localStorage.getItem('session'),
+                command: 'massage-send',
+                token:"1114",
+                massage:msg
+            }
+
+            // ارسال پیام به سرور
+                socket.send(JSON.stringify(msg2));
+
+        }
+
+    </script>
+</head>
+<body>
+<textarea id="msg" style="width: 100%" rows="6"></textarea>
+<button onclick="send_msg()">click</button>
+<hr>
+<p id="massage"></p>
+</body>
+</html>
